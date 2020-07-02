@@ -56,9 +56,8 @@ int main(int argc, char const *argv[])
 	// pageranks must be stored in same order of graphs as the input graph dataset file
 	loadPageRanks(pagerank_file, graph_dataset_R, graph_dataset_S, dataset_size_R, dataset_size_S); 
 	cout<<"PageRank Loaded successfull."<<endl;
- 
-	// timestamping start time
-	chrono::high_resolution_clock::time_point cl0 = chrono::high_resolution_clock::now();
+	// For clock-time calculation
+	chrono::high_resolution_clock::time_point clTemp0, clTemp1; 
 
 	// Preprocessing graph dataset R
 	for(int graph_ind=0; graph_ind < graph_dataset_R.size(); graph_ind++)
@@ -90,9 +89,9 @@ int main(int argc, char const *argv[])
 	vector<long long int> global_score_freq(102, 0);
 	vector<int> score_freq(102,0);
 
-	// For clock-time calculation
-	chrono::high_resolution_clock::time_point clTemp0, clTemp1; 
-
+	// timestamping start time
+	chrono::high_resolution_clock::time_point cl0 = chrono::high_resolution_clock::now();
+ 
 	// Computing Sequence Similarity for each of all nC2 pairs
 	for(int gR = 0; gR < graph_dataset_R.size(); gR++)
 	{
