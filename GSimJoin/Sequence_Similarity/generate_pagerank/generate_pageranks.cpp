@@ -2,7 +2,7 @@
 Compilation:
 CPLUS_INCLUDE_PATH=/usr/include/python3.6/ &&
 export CPLUS_INCLUDE_PATH &&
-g++ -std=c++11 generate_pageranks.cpp graph.cpp -o naive $(/usr/bin/python3.6-config --ldflags)
+g++ -std=c++11 generate_pageranks.cpp graph.cpp -o genpr $(/usr/bin/python3.6-config --ldflags)
 
 */
 
@@ -18,6 +18,12 @@ void initializePython( const char *execfile);
 void exitPython();
 void parseGraphDataset(ifstream &inp, vector<Graph> &graph_dataset);
 void usage();
+double memoryUsage()
+{
+	struct rusage r_usage;
+	getrusage(RUSAGE_SELF, &r_usage);
+	return r_usage.ru_maxrss/1024.0;
+}
 
 int main(int argc, char const *argv[])
 {
@@ -48,8 +54,8 @@ int main(int argc, char const *argv[])
 	for(int g_ind = 0; g_ind < graph_dataset.size(); g_ind++)
 	{
 		computePageRank(graph_dataset[g_ind]);
-		pagerank_file << "g " << graph_dataset[g_ind].vertexCount << " " << graph_dataset[g_ind].edgeCount << " " << graph_dataset[g_ind].gid << endl;
-		for(int vtx_ind = 0; vtx_ind < graph_dataset[g_ind].vertexCount; vtx_ind++)
+		pagerank_file << "g " << graph_dataset[g_ind].vertices.size() << " " << graph_dataset[g_ind].edgeCount << " " << graph_dataset[g_ind].gid << endl;
+		for(int vtx_ind = 0; vtx_ind < graph_dataset[g_ind].vertices.size(); vtx_ind++)
 		{
 			pagerank_file << "v " << graph_dataset[g_ind].vertices[vtx_ind].vid << " " << graph_dataset[g_ind].vertices[vtx_ind].quality << endl;
 		}
@@ -125,48 +131,65 @@ void computePageRank(Graph &g)
 {
    	if(g.edgeCount==0)
    	{
-		for(int i=0; i < g.vertexCount; i++)
+		for(int i=0; i < g.vertices.size(); i++)
 		{
 			g.vertices[i].quality = 0;
 		}
 		return;
 	}
+	cout << "Init done\n";
 	PyObject *vertices, *edges, *e, *pythonArgs, *returnList;
 
-	vertices = PyList_New(g.vertexCount);
-	edges = PyTuple_New(2*g.edgeCount);
+	vertices = PyList_New(g.vertices.size());
+	int eCount = 0;
+	for(int i=0; i < g.vertices.size(); i++)
+	{
+		//cout << i << " " << g.vertices[i].vid << endl;
+		PyList_SetItem(vertices,i,PyLong_FromLong(g.vertices[i].vid));
+		eCount += g.vertices[i].edges.size();
+	}
+	edges = PyTuple_New(eCount);
 
 	int edgeInd = 0;
 	/*copying graph*/
-	for(int i=0; i < g.vertexCount; i++)
+	//cout << g.vertexCount << " " << g.edgeCount << " "<< g.vertices.size() << " " << eCount << " " << g.gid << endl;
+	cout << "Alloc done\n";
+	for(int i=0; i < g.vertices.size(); i++)
 	{
+		//cout << i << " " << g.vertices[i].vid << endl;
 		PyList_SetItem(vertices,i,PyLong_FromLong(g.vertices[i].vid));
-		for(int j=0; j < g.vertices[i].edges.size(); j++){
+		for(int j=0; j < g.vertices[i].edges.size(); j++)
+		{
 			/*an edge*/
 			e = PyTuple_New(2);
+			//cout << i << ", " << j << " : " << g.vertices[i].vid << ", " << g.vertices[i].edges[j]->vid << endl;
 			PyTuple_SetItem(e,0,PyLong_FromLong(g.vertices[i].vid));
 			PyTuple_SetItem(e,1,PyLong_FromLong(g.vertices[i].edges[j]->vid));
 			/*adding e to edges*/
 			PyTuple_SetItem(edges,edgeInd++,e);
 		}
 	}
+	//cout << memoryUsage() << endl;
 	pythonArgs = PyTuple_New(2);
 
 	PyTuple_SetItem(pythonArgs,0,vertices);
 	PyTuple_SetItem(pythonArgs,1,edges);
+	cout << "Linking done\n";
 
 	returnList = PyObject_CallObject(pythonFunc, pythonArgs);
-
+	cout << "Computation done\n";
 	/*copying quality from return list to graph*/
-	for(int i=0; i < g.vertexCount; i++)
+	for(int i=0; i < g.vertices.size(); i++)
 	{
-		 g.vertices[i].quality = PyFloat_AsDouble(PyList_GetItem(returnList, i));
-	}
-
-	Py_DECREF(vertices);
-	Py_DECREF(edges);
-	Py_DECREF(e);
-	Py_DECREF(pythonArgs);
-	Py_DECREF(returnList);
+		g.vertices[i].quality = PyFloat_AsDouble(PyList_GetItem(returnList, i));
+		cout << g.gid <<" "<<g.vertices.size()<<" "<< i << " " << g.vertices[i].quality << endl;
+	}	
+	cout << "Values assigned\n";
+	Py_XDECREF(vertices);
+	Py_XDECREF(edges);
+	Py_XDECREF(e);
+	Py_XDECREF(pythonArgs);
+	Py_XDECREF(returnList);
+	cout << "Deref done\n";
 }
 
