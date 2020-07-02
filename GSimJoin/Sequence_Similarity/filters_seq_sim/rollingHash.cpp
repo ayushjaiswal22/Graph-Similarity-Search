@@ -2,10 +2,8 @@
 
 long long RollingHash::BASEPOWER = 1; 
 
-RollingHash::RollingHash()
-{
-	for(int i=0; i < SHINGLESIZE-1; i++)
-	{
+RollingHash::RollingHash(){
+	for(int i=0; i < SHINGLESIZE-1; i++){
 		BASEPOWER = (BASEPOWER*BASE) % MOD;
 	}
 }

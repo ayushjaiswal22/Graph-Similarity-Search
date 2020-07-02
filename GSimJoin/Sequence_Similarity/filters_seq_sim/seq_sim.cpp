@@ -50,7 +50,7 @@ int commonVertices(Graph &g1, Graph &g2)
 }
 
 // To apply Loose size and Strong size filter to input graph dataset
-void applyFilters(vector<Graph> &graph_dataset, vector<bool> &candidate_graphs, unordered_map<unsigned, unordered_set<unsigned> > &candidate_pairs, int dataset_size, int choice, double simScore_threshold, long long &loose_filter_count, long long &strong_filter_count, long long &candidate_graph_count)
+void applyFilters(vector<Graph> &graph_dataset, vector<bool> &candidate_graphs, unordered_map<unsigned, unordered_set<unsigned> > &candidate_pairs, int dataset_size, int choice, double simScore_threshold, unsigned long &loose_filter_count, unsigned long &strong_filter_count)
 {
 	// Loose Size filter
 	simScore_threshold = simScore_threshold/100.0;
@@ -80,28 +80,20 @@ void applyFilters(vector<Graph> &graph_dataset, vector<bool> &candidate_graphs, 
 					{
 						strong_filter_count++;
 						// Adding graph to pruned graph data structure
-						if(!candidate_graphs[g2]){
-							candidate_graph_count++;
+						if(!candidate_graphs[g2])
 							candidate_graphs[g2] = true;
-						}
-						if(!candidate_graphs[g1]){
-							candidate_graph_count++;
+						if(!candidate_graphs[g1])
 							candidate_graphs[g1] = true;
-						}
 						candidate_pairs[g1].insert(g2);
 					}
 				}
 				else
 				{
 					// Adding graph to pruned graph data structure
-					if(!candidate_graphs[g2]){
-						candidate_graph_count++;
+					if(!candidate_graphs[g2])
 						candidate_graphs[g2] = true;
-					}
-					if(!candidate_graphs[g1]){
-						candidate_graph_count++;
+					if(!candidate_graphs[g1])
 						candidate_graphs[g1] = true;
-					}
 					candidate_pairs[g1].insert(g2);
 				}
 			}
@@ -112,20 +104,19 @@ void applyFilters(vector<Graph> &graph_dataset, vector<bool> &candidate_graphs, 
 			}
 		}
 	}
+	
 }
 
 // To Preprocess the pruned graph pairs 
-void preProcess(vector<Graph> &graph_dataset, vector<bool> &candidate_graphs)
+void preProcess(vector<Graph> &graph_dataset, int choice)
 {
 	for(int g_iter=0; g_iter < graph_dataset.size(); g_iter++)
 	{
-		if(candidate_graphs[g_iter])
-		{
 			graph_dataset[g_iter].sortGraph();
 			graph_dataset[g_iter].walkAlgorithm();
 			graph_dataset[g_iter].computeShingles();
-			graph_dataset[g_iter].computeMinHashes();
-	 	}
+			if(choice==3)
+				graph_dataset[g_iter].computeMinHashes();
 	}
 }
 

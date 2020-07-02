@@ -142,7 +142,7 @@ bool edgeComp(Vertex* &e1, Vertex* &e2)
 {
 	if(e1->quality == e2->quality)
 		return e1->vid < e2->vid;
-	return e1->quality < e2->quality;
+	return e1->quality > e2->quality;
 }
 
 // sorts the graph's vertices and and edge-list of each vertex
