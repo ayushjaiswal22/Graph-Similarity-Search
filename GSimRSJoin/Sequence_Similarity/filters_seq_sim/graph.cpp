@@ -131,7 +131,7 @@ bool vertexComp1(Vertex &v1, Vertex &v2)
 {
 	if(v1.quality == v2.quality)
 		return v1.vid < v2.vid;
-	return v1.quality > v2.quality;
+	return v1.quality < v2.quality;
 }
 
 // for sorting edge-list of each vertex
